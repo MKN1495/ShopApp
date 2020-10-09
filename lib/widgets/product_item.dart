@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../screens/product_detail_screen.dart';
 import '../providers/product.dart';
+import '../providers/cart.dart';
 
 class ProductItem extends StatelessWidget {
   @override
@@ -11,6 +12,8 @@ class ProductItem extends StatelessWidget {
     except favorite icon because it is listening to provider using consumer aproach, 
     any changes in Product only favorite icon gets rebuild */
     final product = Provider.of<Product>(context, listen: false);
+    final cart = Provider.of<Cart>(context, listen: false);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: GridTile(
@@ -41,10 +44,14 @@ class ProductItem extends StatelessWidget {
             product.title,
             textAlign: TextAlign.center,
           ),
-          trailing: IconButton(
-            icon: Icon(Icons.shopping_cart),
-            onPressed: () {},
-            color: Theme.of(context).accentColor,
+          trailing: Consumer<Cart>(
+            builder: (_, cart, child) => IconButton(
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () {
+                cart.addItem(product.id, product.title, product.price);
+              },
+              color: Theme.of(context).accentColor,
+            ),
           ),
         ),
       ),
