@@ -13,6 +13,7 @@ class UserProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffold = Scaffold.of(context);
     return ListTile(
       title: Text(title),
       leading: CircleAvatar(
@@ -55,10 +56,23 @@ class UserProductItem extends StatelessWidget {
                         child: Text('No'),
                       ),
                       FlatButton(
-                        onPressed: () {
-                          Provider.of<Products>(context, listen: false)
-                              .removeItem(id);
-                          Navigator.of(ctx).pop(true);
+                        onPressed: () async {
+                          try {
+                            Navigator.of(ctx).pop(true);
+                            await Provider.of<Products>(context, listen: false)
+                                .deleteProduct(id);
+                          } catch (error) {
+                            //print('Received error: $error');
+                            // Scaffold.of(context).showSnackBar(...); doesn't work in Future i.e in async. so we need to have a constant scaffold
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Delete Failed',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          }
                         },
                         child: Text('Yes'),
                       )

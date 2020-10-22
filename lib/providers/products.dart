@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shopApp/models/http_exception.dart';
 
 import './product.dart';
 
@@ -55,6 +56,9 @@ class Products with ChangeNotifier {
       final response = await http.get(url);
       //print(json.decode(response.body));
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if (extractedData == null) {
+        return;
+      }
       final List<Product> loadedProducts = [];
       extractedData.forEach((prodId, prodData) {
         loadedProducts.add(Product(
@@ -63,6 +67,7 @@ class Products with ChangeNotifier {
           description: prodData['description'],
           price: prodData['price'],
           imageUrl: prodData['imageUrl'],
+          isFavorite: prodData['isFavorite'],
         ));
       });
       _items = loadedProducts;
@@ -102,15 +107,114 @@ class Products with ChangeNotifier {
     }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((product) => product.id == id);
     if (prodIndex >= 0) {
-      _items[prodIndex] = newProduct;
-      notifyListeners();
+      // need to change the url for updating the product for a particular id
+      final url = 'https://shopapp-719ca.firebaseio.com/products/$id.json';
+      try {
+        await http.patch(url,
+            body: json.encode({
+              'title': newProduct.title,
+              'description': newProduct.description,
+              'price': newProduct.price,
+              'imageUrl': newProduct.imageUrl,
+            }));
+        _items[prodIndex] = newProduct;
+        notifyListeners();
+      } catch (error) {
+        throw '$error';
+      }
     } else {
       print('...');
     }
   }
+
+  // Using async and await
+  Future<void> deleteProduct(String id) async {
+    final url = 'https://shopapp-719ca.firebaseio.com/products/$id.json';
+    // find the index of item to be deleted
+    final existingProductIndex =
+        _items.indexWhere((product) => product.id == id);
+    // keep a copy of item to be deleted, to reinsert in list if any error occurs
+    var existingProduct = _items[existingProductIndex];
+
+    // ++++++++++++++++++++++++++++++++++++++
+    /*
+    // 1st way delete locally, notify, delete in server, if any error occurs rollback
+    _items.removeAt(existingProductIndex);
+    notifyListeners();
+
+    final response = await http.delete(url);
+
+    // if any error occurs rollback the item
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException('Could not delete the item');
+    }
+    // clear the memory
+    existingProduct = null;
+    */
+    // ++++++++++++++++++++++++++++++++++++++
+
+    // ========================================
+    // 2nd way delete remotely then delete locally
+    final response = await http.delete(url);
+
+    if (response.statusCode >= 400) {
+      // if error occurs throw an exception
+      throw HttpException('Could not delete the item');
+    }
+    // if no error occurs, remove locally and clear memory
+    _items.removeAt(existingProductIndex);
+    notifyListeners();
+    existingProduct = null;
+    ;
+    // ========================================
+  }
+
+/*
+  // This works partially, So not a better way. Use the above method
+  // Using Future and then
+  void deleteProduct(String id) {
+    final url = 'https://shopapp-719ca.firebaseio.com/products/$id';
+    // find the index of item to be deleted
+    final existingProductIndex =
+        _items.indexWhere((product) => product.id == id);
+    // keep a copy of item to be deleted, to reinsert in list if any error occurs
+    var existingProduct = _items[existingProductIndex];
+
+    // 1st way delete locally, notify, delete in server, if any error occurs rollback
+    // _items.removeAt(existingProductIndex);
+    // notifyListeners();
+    // http.delete(url).then((response) {
+    //   if (response.statusCode >= 400) {
+    //     throw HttpException('Could not delete the item');
+    //   }
+    //   existingProduct = null;
+    // }).catchError((error) {
+    //   print('Exception received at catchError in deleteProduct');
+    //   // if any error occurs, reinsert the item
+    //   _items.insert(existingProductIndex, existingProduct);
+    //   notifyListeners();
+    //   throw error;
+    // });
+
+    //2nd way -> delete the item in server, then delete locally
+    http.delete(url).then((response) {
+      if (response.statusCode >= 400) {
+        throw HttpException('Could not delete the item');
+      }
+      _items.removeAt(existingProductIndex);
+      existingProduct = null;
+      notifyListeners();
+    }).catchError((error) {
+      print('Exception received at catchError in deleteProduct');
+      throw error;
+    });
+  }
+  */
 
   Product findById(String id) {
     return _items.firstWhere((product) => id == product.id);
