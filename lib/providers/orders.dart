@@ -27,51 +27,12 @@ class Orders with ChangeNotifier {
   }
 
   final String authToken;
-  Orders(this.authToken, this._orders);
-
-  Future<void> addOrder(List<CartItem> cartProducts, double total) async {
-    final url =
-        'https://shopapp-719ca.firebaseio.com/orders.json?auth=$authToken';
-    final timeStamp = DateTime.now();
-    try {
-      final response = await http.post(
-        url,
-        body: json.encode(
-          {
-            'amount': total,
-            'dateTime': timeStamp
-                .toIso8601String(), // uniform string representation of date, because we can't send datetime object
-            'products':
-                cartProducts // products is a list of cartItem. cartItem is a object. we can't have objects in json file. we need to map all the objects to map
-                    .map(
-                      (cp) => {
-                        'id': cp.id,
-                        'title': cp.title,
-                        'price': cp.price,
-                        'quantity': cp.quantity,
-                      },
-                    )
-                    .toList(),
-          },
-        ),
-      );
-
-      _orders.insert(
-        0,
-        OrderItem(
-          id: json.decode(response.body)['name'],
-          amount: total,
-          products: cartProducts,
-          dateTime: timeStamp,
-        ),
-      );
-      notifyListeners();
-    } catch (error) {}
-  }
+  final String userId;
+  Orders(this.authToken, this.userId, this._orders);
 
   Future<void> fetchAndSetOrders() async {
     final url =
-        'https://shopapp-719ca.firebaseio.com/orders.json?auth=$authToken';
+        'https://shopapp-719ca.firebaseio.com/orders/$userId.json?auth=$authToken'; // fetching orders based on userId
     try {
       final response = await http.get(url);
       //print(json.decode(response.body));
@@ -109,5 +70,45 @@ class Orders with ChangeNotifier {
     } catch (error) {
       throw '$error';
     }
+  }
+
+  Future<void> addOrder(List<CartItem> cartProducts, double total) async {
+    final url =
+        'https://shopapp-719ca.firebaseio.com/orders/$userId.json?auth=$authToken'; // storing orders based on userId
+    final timeStamp = DateTime.now();
+    try {
+      final response = await http.post(
+        url,
+        body: json.encode(
+          {
+            'amount': total,
+            'dateTime': timeStamp
+                .toIso8601String(), // uniform string representation of date, because we can't send datetime object
+            'products':
+                cartProducts // products is a list of cartItem. cartItem is a object. we can't have objects in json file. we need to map all the objects to map
+                    .map(
+                      (cp) => {
+                        'id': cp.id,
+                        'title': cp.title,
+                        'price': cp.price,
+                        'quantity': cp.quantity,
+                      },
+                    )
+                    .toList(),
+          },
+        ),
+      );
+
+      _orders.insert(
+        0,
+        OrderItem(
+          id: json.decode(response.body)['name'],
+          amount: total,
+          products: cartProducts,
+          dateTime: timeStamp,
+        ),
+      );
+      notifyListeners();
+    } catch (error) {}
   }
 }
