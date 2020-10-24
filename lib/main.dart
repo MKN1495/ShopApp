@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import './screens/product_detail_screen.dart';
-import './screens/products_overview_screen.dart';
-import './screens/cart_screen.dart';
 import './providers/products.dart';
 import './providers/cart.dart';
 import './providers/orders.dart';
 import './providers/auth.dart';
+
+import './screens/splash_screen.dart';
+import './screens/product_detail_screen.dart';
+import './screens/products_overview_screen.dart';
+import './screens/cart_screen.dart';
 
 import './screens/orders_screen.dart';
 import './screens/user_products_screen.dart';
@@ -22,6 +24,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    //print('MyApp');
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (ctx) => Auth()),
@@ -56,7 +59,14 @@ class MyApp extends StatelessWidget {
           ),
           home: auth.isAuth
               ? ProductsOverviewScreen()
-              : AuthScreen(), // If authenticated then load products overview screen else authentication screen
+              : FutureBuilder(
+                  future: auth.tryAutoLogin(), // try autoLogin if app reopened
+                  builder: (ctx, authResultSnapshot) => authResultSnapshot
+                              .connectionState ==
+                          ConnectionState.waiting
+                      ? SplashScreen() // load splashScreen if autoLogin is processing
+                      : AuthScreen(),
+                ), // If authenticated then load products overview screen else authentication screen
           routes: {
             ProductsOverviewScreen.routeName: (ctx) => ProductsOverviewScreen(),
             ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),

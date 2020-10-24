@@ -27,6 +27,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
 
   @override
   void initState() {
+    //print('InitState called');
     // This also works but not the best solution
     /* Future.delayed(Duration.zero)
          .then((_) => Provider.of<Products>(context).fetchAndSetProduct()); */
@@ -35,13 +36,16 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
 
   @override
   void didChangeDependencies() {
+    //print('didChagneDependencies called');
     if (_isInit) {
       setState(() {
+        //print('setState triggered');
         _isLoading = true;
       });
       Provider.of<Products>(context)
           .fetchAndSetProduct()
           .then((_) => setState(() {
+                //print('setState triggered');
                 _isLoading = false;
               }));
       _isInit = false;
@@ -51,6 +55,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    //print('ProductOverviewScreen');
     return Scaffold(
       appBar: AppBar(
         title: Text('My Shop'),
@@ -58,6 +63,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
           PopupMenuButton(
             onSelected: (FilterOptions selectedValue) {
               setState(() {
+                //print('setState triggered');
                 if (selectedValue == FilterOptions.Favorites)
                   _showOnlyFavorites = true;
                 else

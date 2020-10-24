@@ -43,11 +43,13 @@ class AppDrawer extends StatelessWidget {
           Divider(),
           ListTile(
             leading: Icon(Icons.exit_to_app),
-            title: Text('Manage Products'),
+            title: Text('Log Out'),
             onTap: () {
               // Navigator.of(context)
               //     .pushReplacementNamed(UserProductsScreen.routeName);
               Navigator.of(context).pop(); // to close drawer from background
+              Navigator.of(context).pushNamed(
+                  '/'); // To redirect the homeScreen so that authScreen is shown
               Provider.of<Auth>(context, listen: false).logout();
             },
           )
