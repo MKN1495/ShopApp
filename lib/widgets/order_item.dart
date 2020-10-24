@@ -22,7 +22,7 @@ class _OrderItemState extends State<OrderItem> {
           ListTile(
             title: Text('\$${widget.order.amount}'),
             subtitle: Text(
-              DateFormat('dd/mm/yyyy  hh:mm').format(widget.order.dateTime),
+              DateFormat('dd/MM/yyyy').add_jm().format(widget.order.dateTime),
             ),
             trailing: IconButton(
               icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
