@@ -51,28 +51,50 @@ class Products with ChangeNotifier {
   }
 
   final String authToken;
-  Products(this.authToken, this._items);
+  final String userId;
+  Products(this.authToken, this.userId, this._items);
 
-  Future<void> fetchAndSetProduct() async {
-    final url =
-        'https://shopapp-719ca.firebaseio.com/products.json?auth=$authToken';
+  Future<void> fetchAndSetProduct([bool filterByUser = false]) async {
+    // url for fetching all the products irrespective of users
+    // var url =
+    //     'https://shopapp-719ca.firebaseio.com/products.json?auth=$authToken';
+
+    final String filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
+
+    var url =
+        'https://shopapp-719ca.firebaseio.com/products.json?auth=$authToken&$filterString'; // filter where creatorId and userId matches for particular user, Firebase rules need to be modified
     try {
       final response = await http.get(url);
       //print(json.decode(response.body));
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      // check if any product exist
       if (extractedData == null) {
         return;
       }
+
+      // check for favorite product for particular user
+      url =
+          'https://shopapp-719ca.firebaseio.com/userFavorites/$userId.json?auth=$authToken';
+
+      final favoriteResponse = await http.get(url);
+      final favoriteData = json.decode(favoriteResponse.body);
+
       final List<Product> loadedProducts = [];
       extractedData.forEach((prodId, prodData) {
-        loadedProducts.add(Product(
-          id: prodId,
-          title: prodData['title'],
-          description: prodData['description'],
-          price: prodData['price'],
-          imageUrl: prodData['imageUrl'],
-          isFavorite: prodData['isFavorite'],
-        ));
+        loadedProducts.add(
+          Product(
+            id: prodId,
+            title: prodData['title'],
+            description: prodData['description'],
+            price: prodData['price'],
+            imageUrl: prodData['imageUrl'],
+            isFavorite: favoriteData == null
+                ? false
+                : favoriteData[prodId] ??
+                    false, // check if favoriteData for null (user haven't made any favorite) and if favoriteData[prodId] is null (no prodId exist)
+          ),
+        );
       });
       _items = loadedProducts;
       notifyListeners();
@@ -93,7 +115,7 @@ class Products with ChangeNotifier {
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
-            'isFavorite': product.isFavorite,
+            'creatorId': userId, // keeps the creatorId who added the product
           },
         ),
       );
