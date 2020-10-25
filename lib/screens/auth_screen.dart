@@ -125,18 +125,13 @@ class _AuthCardState extends State<AuthCard>
     ).animate(
       CurvedAnimation(curve: Curves.slowMiddle, parent: _controller),
     );
-
-    // add listener to the animation object
-    _heightAnimation.addListener(() {
-      setState(() {});
-    });
   }
 
   @override
   void dispose() {
     super.dispose();
     _controller.dispose();
-    _heightAnimation.removeListener(() {});
+    //_heightAnimation.removeListener(() {});
   }
 
   void _showErrorDialog(String message) {
@@ -229,12 +224,17 @@ class _AuthCardState extends State<AuthCard>
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
-      child: Container(
-        //height: _authMode == AuthMode.Signup ? 320 : 260,
-        height: _heightAnimation.value.height,
-        constraints: BoxConstraints(minHeight: _heightAnimation.value.height),
-        width: deviceSize.width * 0.75,
-        padding: EdgeInsets.all(16.0),
+      child: AnimatedBuilder(
+        // animatedBuilder automatically manages the listener
+        animation: _heightAnimation,
+        builder: (ctx, ch) => Container(
+          //height: _authMode == AuthMode.Signup ? 320 : 260,
+          height: _heightAnimation.value.height,
+          constraints: BoxConstraints(minHeight: _heightAnimation.value.height),
+          width: deviceSize.width * 0.75,
+          padding: EdgeInsets.all(16.0),
+          child: ch,
+        ),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
