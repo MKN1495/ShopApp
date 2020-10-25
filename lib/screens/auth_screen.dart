@@ -105,32 +105,32 @@ class _AuthCardState extends State<AuthCard>
   var _isLoading = false;
   final _passwordController = TextEditingController();
 
-  AnimationController _controller;
-  Animation<Size> _heightAnimation;
+  // AnimationController _controller;
+  // Animation<Size> _heightAnimation;
 
   @override
   void initState() {
     super.initState();
 
     // initialize animation controller
-    _controller = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 300),
-    );
+    //_controller = AnimationController(
+    //   vsync: this,
+    //   duration: Duration(milliseconds: 300),
+    // );
 
     // initialize animation object
-    _heightAnimation = Tween(
-      begin: Size(double.infinity, 260),
-      end: Size(double.infinity, 320),
-    ).animate(
-      CurvedAnimation(curve: Curves.slowMiddle, parent: _controller),
-    );
+    // _heightAnimation = Tween(
+    //   begin: Size(double.infinity, 260),
+    //   end: Size(double.infinity, 320),
+    // ).animate(
+    //   CurvedAnimation(curve: Curves.slowMiddle, parent: _controller),
+    // );
   }
 
   @override
   void dispose() {
     super.dispose();
-    _controller.dispose();
+    //_controller.dispose();
     //_heightAnimation.removeListener(() {});
   }
 
@@ -205,14 +205,14 @@ class _AuthCardState extends State<AuthCard>
       });
 
       // start the animation controller
-      _controller.forward();
+      //_controller.forward();
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
 
       // reverse the animation controller
-      _controller.reverse();
+      //_controller.reverse();
     }
   }
 
@@ -224,17 +224,16 @@ class _AuthCardState extends State<AuthCard>
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
-      child: AnimatedBuilder(
-        // animatedBuilder automatically manages the listener
-        animation: _heightAnimation,
-        builder: (ctx, ch) => Container(
-          //height: _authMode == AuthMode.Signup ? 320 : 260,
-          height: _heightAnimation.value.height,
-          constraints: BoxConstraints(minHeight: _heightAnimation.value.height),
-          width: deviceSize.width * 0.75,
-          padding: EdgeInsets.all(16.0),
-          child: ch,
+      child: AnimatedContainer(
+        // animatedContainer doesn't require AnimationController
+        duration: Duration(milliseconds: 300),
+        curve: Curves.linear,
+        height: _authMode == AuthMode.Signup ? 320 : 260,
+        constraints: BoxConstraints(
+          minHeight: _authMode == AuthMode.Signup ? 320 : 260,
         ),
+        width: deviceSize.width * 0.75,
+        padding: EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
